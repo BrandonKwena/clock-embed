@@ -209,7 +209,7 @@
                     <i class="ti ti-focus-2"></i>
                     Focused
                 </div>
-                <div class="timer-time" id="focusTime">00:00</div>
+                <div class="timer-time" id="focusTime">00:00:00</div>
                 <div class="timer-percentage" id="focusPercent">0% of total</div>
             </div>
             
@@ -218,7 +218,7 @@
                     <i class="ti ti-alert-circle"></i>
                     Distracted
                 </div>
-                <div class="timer-time" id="distractedTime">00:00</div>
+                <div class="timer-time" id="distractedTime">00:00:00</div>
                 <div class="timer-percentage" id="distractedPercent">0% of total</div>
             </div>
         </div>
@@ -240,7 +240,7 @@
         
         <div class="stats">
             <div class="stats-label">Total time tracked</div>
-            <div class="stats-time" id="totalTime">00:00</div>
+            <div class="stats-time" id="totalTime">00:00:00</div>
         </div>
         
         <div class="instructions">
@@ -258,6 +258,7 @@
         let isRunning = false;
         let activeTimer = 'focus';
         let intervalId = null;
+        let lastUpdateMs = null;
         
         const startBtn = document.getElementById('startBtn');
         const switchBtn = document.getElementById('switchBtn');
@@ -266,9 +267,10 @@
         const distractedCard = document.getElementById('distractedCard');
         
         function formatTime(seconds) {
-            const mins = Math.floor(seconds / 60);
+            const hours = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
             const secs = seconds % 60;
-            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
         }
         
         function updateDisplay() {
@@ -289,6 +291,25 @@
             distractedCard.classList.toggle('active', activeTimer === 'distracted');
             distractedCard.classList.toggle('distracted', activeTimer === 'distracted');
         }
+
+        function applyElapsedTime() {
+            if (!isRunning || lastUpdateMs === null) return;
+
+            const nowMs = Date.now();
+            const elapsedSeconds = Math.floor((nowMs - lastUpdateMs) / 1000);
+
+            if (elapsedSeconds <= 0) return;
+
+            if (activeTimer === 'focus') {
+                focusTime += elapsedSeconds;
+            } else {
+                distractedTime += elapsedSeconds;
+            }
+
+            // Keep fractional milliseconds so time doesn't drift.
+            lastUpdateMs += elapsedSeconds * 1000;
+            updateDisplay();
+        }
         
         startBtn.addEventListener('click', function() {
             isRunning = !isRunning;
@@ -297,25 +318,24 @@
             if (isRunning) {
                 startBtn.innerHTML = '<i class="ti ti-player-pause"></i>Pause';
                 startBtn.classList.add('running');
+                lastUpdateMs = Date.now();
                 
-                intervalId = setInterval(function() {
-                    if (activeTimer === 'focus') {
-                        focusTime++;
-                    } else {
-                        distractedTime++;
-                    }
-                    updateDisplay();
-                }, 1000);
+                intervalId = setInterval(applyElapsedTime, 250);
             } else {
+                applyElapsedTime();
                 startBtn.innerHTML = '<i class="ti ti-player-play"></i>Start';
                 startBtn.classList.remove('running');
                 clearInterval(intervalId);
+                intervalId = null;
+                lastUpdateMs = null;
             }
         });
         
         switchBtn.addEventListener('click', function() {
             if (isRunning) {
+                applyElapsedTime();
                 activeTimer = activeTimer === 'focus' ? 'distracted' : 'focus';
+                lastUpdateMs = Date.now();
                 updateActiveCard();
             }
         });
@@ -326,6 +346,8 @@
             distractedTime = 0;
             activeTimer = 'focus';
             clearInterval(intervalId);
+            intervalId = null;
+            lastUpdateMs = null;
             
             startBtn.innerHTML = '<i class="ti ti-player-play"></i>Start';
             startBtn.classList.remove('running');
