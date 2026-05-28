@@ -209,7 +209,7 @@
                     <i class="ti ti-focus-2"></i>
                     Focused
                 </div>
-                <div class="timer-time" id="focusTime">00:00:00</div>
+                <div class="timer-time" id="focusTime">0h 00m 00s</div>
                 <div class="timer-percentage" id="focusPercent">0% of total</div>
             </div>
             
@@ -218,7 +218,7 @@
                     <i class="ti ti-alert-circle"></i>
                     Distracted
                 </div>
-                <div class="timer-time" id="distractedTime">00:00:00</div>
+                <div class="timer-time" id="distractedTime">0h 00m 00s</div>
                 <div class="timer-percentage" id="distractedPercent">0% of total</div>
             </div>
         </div>
@@ -240,7 +240,7 @@
         
         <div class="stats">
             <div class="stats-label">Total time tracked</div>
-            <div class="stats-time" id="totalTime">00:00:00</div>
+            <div class="stats-time" id="totalTime">0h 00m 00s</div>
         </div>
         
         <div class="instructions">
@@ -270,7 +270,7 @@
             const hours = Math.floor(seconds / 3600);
             const mins = Math.floor((seconds % 3600) / 60);
             const secs = seconds % 60;
-            return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            return `${hours}h ${String(mins).padStart(2, '0')}m ${String(secs).padStart(2, '0')}s`;
         }
         
         function updateDisplay() {
